@@ -50,6 +50,7 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadingCase()
         preparePopularItemsRecyclerView()
         observeRandomMeal()
         onRandomMealClick()
@@ -90,7 +91,6 @@ class HomeFragment : Fragment() {
         homeViewModel.observeCategoriesLiveData()
             .observe(viewLifecycleOwner, Observer { categories ->
                 categoriesAdapter.differ.submitList(categories)
-
 
             })
     }
@@ -141,7 +141,28 @@ class HomeFragment : Fragment() {
             Glide.with(this@HomeFragment).load(meal?.strMealThumb)
                 .into(binding.imgRandomMeal)
             this.randomMeal = meal
+            responseCase()
         }
+    }
+
+    private fun loadingCase() {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.tvWhatToEat.visibility = View.INVISIBLE
+        binding.imgRandomMeal.visibility = View.INVISIBLE
+        binding.tvPopularItems.visibility = View.INVISIBLE
+        binding.rvPopularItems.visibility = View.INVISIBLE
+        binding.tvCategories.visibility = View.INVISIBLE
+        binding.rvCategories.visibility = View.INVISIBLE
+    }
+
+    private fun responseCase() {
+        binding.tvWhatToEat.visibility = View.VISIBLE
+        binding.imgRandomMeal.visibility = View.VISIBLE
+        binding.tvPopularItems.visibility = View.VISIBLE
+        binding.rvPopularItems.visibility = View.VISIBLE
+        binding.tvCategories.visibility = View.VISIBLE
+        binding.rvCategories.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.INVISIBLE
     }
 
 }

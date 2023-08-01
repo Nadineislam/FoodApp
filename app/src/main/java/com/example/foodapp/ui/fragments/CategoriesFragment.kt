@@ -1,5 +1,6 @@
 package com.example.foodapp.ui.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.foodapp.adapters.CategoriesAdapter
 import com.example.foodapp.databinding.FragmentCategoriesBinding
+import com.example.foodapp.ui.CategoryMealsActivity
 import com.example.foodapp.viewmodels.HomeViewModel
 import com.example.foodapp.ui.MainActivity
 
@@ -25,6 +27,7 @@ class CategoriesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         prepareRecyclerView()
         observeCategories()
+        onCategoryClick()
     }
 
     private fun observeCategories() {
@@ -49,5 +52,14 @@ class CategoriesFragment : Fragment() {
     ): View {
         binding = FragmentCategoriesBinding.inflate(inflater)
         return binding.root
+    }
+
+    private fun onCategoryClick() {
+        categoriesAdapter.onItemClick = { category ->
+            val intent = Intent(activity, CategoryMealsActivity::class.java)
+            intent.putExtra(HomeFragment.CATEGORY_NAME, category.strCategory)
+            startActivity(intent)
+
+        }
     }
 }

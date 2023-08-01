@@ -1,6 +1,5 @@
 package com.example.foodapp.api
 
-import androidx.annotation.NonNull
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
