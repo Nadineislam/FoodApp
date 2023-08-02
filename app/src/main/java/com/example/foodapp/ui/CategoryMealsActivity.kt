@@ -4,13 +4,20 @@ package com.example.foodapp.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
+import com.example.foodapp.utils.Constants.Companion.CATEGORY_NAME
+import com.example.foodapp.utils.Constants.Companion.MEAL_ID
+import com.example.foodapp.utils.Constants.Companion.MEAL_NAME
+import com.example.foodapp.utils.Constants.Companion.MEAL_THUMB
+import com.example.foodapp.utils.Resource
 import com.example.foodapp.repository.MealRepository
 import com.example.foodapp.adapters.CategoryMealsAdapter
 import com.example.foodapp.databinding.ActivityCategoryMealsBinding
-import com.example.foodapp.ui.fragments.HomeFragment
+import com.example.foodapp.db.MealDatabase
 import com.example.foodapp.viewmodels.CategoryMealsViewModel
 import com.example.foodapp.viewmodels.CategoryMealsViewModelFactory
 
@@ -23,18 +30,35 @@ class CategoryMealsActivity : AppCompatActivity() {
         binding = ActivityCategoryMealsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         prepareRecyclerView()
-        val categoryMealsRepository = MealRepository()
+        val categoryMealsRepository = MealRepository(MealDatabase(this))
         val categoryMealsViewModelFactory = CategoryMealsViewModelFactory(categoryMealsRepository)
         categoryMealsViewModel = ViewModelProvider(
             this,
             categoryMealsViewModelFactory
         )[CategoryMealsViewModel::class.java]
-        categoryMealsViewModel.getMealsByCategory(intent.getStringExtra(HomeFragment.CATEGORY_NAME)!!)
-        categoryMealsViewModel.observeMealsLiveData().observe(this, Observer { mealsList ->
-            binding.tvCategoryCount.text = mealsList.size.toString()
-            categoryMealsAdapter.differ.submitList(mealsList)
 
+        categoryMealsViewModel.getMealsByCategory(intent.getStringExtra(CATEGORY_NAME) ?: "")
+
+        categoryMealsViewModel.observeMealsLiveData().observe(this, Observer { response ->
+            when (response) {
+                is Resource.Success -> {
+                    response.data?.let { mealsByCategoryList ->
+                        hideProgressBar()
+                        categoryMealsAdapter.differ.submitList(mealsByCategoryList.meals)
+                    }
+                }
+                is Resource.Error -> {
+                    hideProgressBar()
+                    response.message?.let { message ->
+                        Log.e("Home Fragment", "An error occurred: $message")
+                    }
+                }
+                is Resource.Loading -> {
+                    showProgressBar()
+                }
+            }
         })
+
         onCategoryItemClick()
     }
 
@@ -49,12 +73,20 @@ class CategoryMealsActivity : AppCompatActivity() {
     private fun onCategoryItemClick() {
         categoryMealsAdapter.onItemClick = { meal ->
             val intent = Intent(this, MealActivity::class.java)
-            intent.putExtra(HomeFragment.MEAL_ID, meal.idMeal)
-            intent.putExtra(HomeFragment.MEAL_NAME, meal.strMeal)
-            intent.putExtra(HomeFragment.MEAL_THUMB, meal.strMealThumb)
+            intent.putExtra(MEAL_ID, meal.idMeal)
+            intent.putExtra(MEAL_NAME, meal.strMeal)
+            intent.putExtra(MEAL_THUMB, meal.strMealThumb)
             startActivity(intent)
 
 
         }
+    }
+
+    private fun showProgressBar() {
+        binding.progressBar.visibility = View.VISIBLE
+    }
+
+    private fun hideProgressBar() {
+        binding.progressBar.visibility = View.INVISIBLE
     }
 }

@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.foodapp.databinding.MealItemBinding
-import com.example.foodapp.models.Category
 import com.example.foodapp.models.Meal
 
 class MealsAdapter : RecyclerView.Adapter<MealsAdapter.FavoritesViewHolder>() {

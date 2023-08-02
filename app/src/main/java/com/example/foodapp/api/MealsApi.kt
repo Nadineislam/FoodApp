@@ -4,6 +4,7 @@ import com.example.foodapp.models.CategoryList
 import com.example.foodapp.models.MealsByCategoryList
 import com.example.foodapp.models.MealList
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -15,14 +16,14 @@ interface MealsApi {
     fun getMealDetails(@Query("i") id: String): Call<MealList>
 
     @GET("filter.php")
-    fun getPopularMeals(@Query("c") categoryName: String): Call<MealsByCategoryList>
+    suspend fun getPopularMeals(@Query("c") categoryName: String): Response<MealsByCategoryList>
 
     @GET("categories.php")
-    fun getCategory(): Call<CategoryList>
+    suspend fun getCategory(): Response<CategoryList>
 
     @GET("filter.php")
-    fun getMealsByCategory(@Query("c") categoryName: String): Call<MealsByCategoryList>
+    suspend fun getMealsByCategory(@Query("c") categoryName: String): Response<MealsByCategoryList>
 
     @GET("search.php")
-    fun getMealsBySearch(@Query("s") mealName: String): Call<MealList>
+    suspend fun getMealsBySearch(@Query("s") mealName: String): Response<MealList>
 }

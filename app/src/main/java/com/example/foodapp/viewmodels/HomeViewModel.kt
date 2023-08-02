@@ -5,8 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodapp.utils.Resource
 import com.example.foodapp.repository.MealRepository
-import com.example.foodapp.db.MealDatabase
 import com.example.foodapp.models.*
 import kotlinx.coroutines.launch
 import retrofit2.Call
@@ -14,14 +14,15 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class HomeViewModel(
-    private val mealRepository: MealRepository,
-    private val mealDatabase: MealDatabase
+    private val mealRepository: MealRepository
 ) : ViewModel() {
     private var randomMealLiveData = MutableLiveData<Meal>()
-    private var popularMealsLiveData = MutableLiveData<List<MealsByCategory>>()
-    private var categoriesLiveData = MutableLiveData<List<Category>>()
-    private var favoritesMealsLiveData = mealDatabase.mealDao().getMeals()
-    private var searchMealLiveData = MutableLiveData<List<Meal>>()
+    private var popularMealsLiveData: MutableLiveData<Resource<MealsByCategoryList>> =
+        MutableLiveData()
+    private var categoriesLiveData: MutableLiveData<Resource<CategoryList>> = MutableLiveData()
+    private var favoritesMealsLiveData = mealRepository.getMeals()
+
+    private var searchMealLiveData = MutableLiveData<Resource<MealList>>()
 
     init {
         getRandomMeal()
@@ -48,73 +49,74 @@ class HomeViewModel(
         return randomMealLiveData
     }
 
-    fun getPopularMeals() =
-        mealRepository.getPopularMeals("Seafood").enqueue(object : Callback<MealsByCategoryList> {
-            override fun onResponse(
-                call: Call<MealsByCategoryList>,
-                response: Response<MealsByCategoryList>
-            ) {
-
-                popularMealsLiveData.value = response.body()?.meals
-
-            }
-
-            override fun onFailure(call: Call<MealsByCategoryList>, t: Throwable) {
-                Log.e("Home Fragment", t.message.toString())
-            }
-
-
-        })
-
-    fun searchMeal(searchQuery: String) {
-        mealRepository.getMealsBySearch(searchQuery).enqueue(object : Callback<MealList> {
-            override fun onResponse(call: Call<MealList>, response: Response<MealList>) {
-                val mealList = response.body()?.meals
-                mealList?.let { searchMealLiveData.postValue(it) }
-            }
-
-            override fun onFailure(call: Call<MealList>, t: Throwable) {
-                Log.e("Home Fragment", t.message.toString())
-            }
-
-        })
-
+    fun getCategories() = viewModelScope.launch {
+        categoriesLiveData.postValue(Resource.Loading())
+        val response = mealRepository.getCategory()
+        categoriesLiveData.postValue(handleCategoriesResponse(response))
     }
+
+    private fun handleCategoriesResponse(response: Response<CategoryList>): Resource<CategoryList> {
+        if (response.isSuccessful) {
+            response.body()?.let { resultResponse ->
+                return Resource.Success(resultResponse)
+            }
+        }
+        return Resource.Error(response.message())
+    }
+
+    fun getPopularMeals() = viewModelScope.launch {
+        popularMealsLiveData.postValue(Resource.Loading())
+        val response = mealRepository.getPopularMeals("Seafood")
+        popularMealsLiveData.postValue(handlePopularMealsResponse(response))
+    }
+
+    private fun handlePopularMealsResponse(response: Response<MealsByCategoryList>): Resource<MealsByCategoryList> {
+        if (response.isSuccessful) {
+            response.body()?.let { resultResponse ->
+                return Resource.Success(resultResponse)
+            }
+        }
+        return Resource.Error(response.message())
+    }
+
+    fun searchMeal(searchQuery: String) = viewModelScope.launch {
+        searchMealLiveData.postValue(Resource.Loading())
+        val response = mealRepository.getMealsBySearch(searchQuery)
+        searchMealLiveData.postValue(handleSearchMealResponse(response))
+    }
+
+    private fun handleSearchMealResponse(response: Response<MealList>): Resource<MealList> {
+        if (response.isSuccessful) {
+            response.body()?.let { resultResponse ->
+                return Resource.Success(resultResponse)
+            }
+        }
+        return Resource.Error(response.message())
+    }
+
 
     fun insertMeal(meal: Meal) {
         viewModelScope.launch {
-            mealDatabase.mealDao().upsertMeal(meal)
+            mealRepository.upsertMeal(meal)
         }
     }
 
     fun deleteMeal(meal: Meal) {
         viewModelScope.launch {
-            mealDatabase.mealDao().deleteMeal(meal)
+            mealRepository.deleteMeal(meal)
         }
     }
 
-    fun observeSearchMealsLiveData(): LiveData<List<Meal>> {
+    fun observeSearchMealsLiveData(): LiveData<Resource<MealList>> {
         return searchMealLiveData
     }
 
-    fun observePopularMealsLiveData(): LiveData<List<MealsByCategory>> {
+    fun observePopularMealsLiveData(): LiveData<Resource<MealsByCategoryList>> {
         return popularMealsLiveData
     }
 
-    fun getCategories() = mealRepository.getCategory().enqueue(object : Callback<CategoryList> {
-        override fun onResponse(call: Call<CategoryList>, response: Response<CategoryList>) {
-            response.body()?.let { categoryList ->
-                categoriesLiveData.value = categoryList.categories
-            }
-        }
 
-        override fun onFailure(call: Call<CategoryList>, t: Throwable) {
-            Log.e("Home Fragment", t.message.toString())
-        }
-
-    })
-
-    fun observeCategoriesLiveData(): LiveData<List<Category>> {
+    fun observeCategoriesLiveData(): LiveData<Resource<CategoryList>> {
         return categoriesLiveData
     }
 

@@ -1,6 +1,7 @@
 package com.example.foodapp.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import com.example.foodapp.adapters.MealsAdapter
 import com.example.foodapp.databinding.FragmentSearchBinding
 import com.example.foodapp.viewmodels.HomeViewModel
 import com.example.foodapp.ui.MainActivity
+import com.example.foodapp.utils.Resource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -53,8 +55,25 @@ class SearchFragment : Fragment() {
     }
 
     private fun observeSearchMealsLiveData() {
-        viewModel.observeSearchMealsLiveData().observe(viewLifecycleOwner, Observer { mealList ->
-            searchAdapter.differ.submitList(mealList)
+        viewModel.observeSearchMealsLiveData().observe(viewLifecycleOwner, Observer { response ->
+            when (response) {
+                is Resource.Success -> {
+                    response.data?.let { mealList ->
+                        searchAdapter.differ.submitList(mealList.meals)
+                        hideProgressBar()
+                    }
+                }
+                is Resource.Error -> {
+                    hideProgressBar()
+                    response.message?.let { message ->
+                        Log.e("Home Fragment", "An error occurred: $message")
+                    }
+                }
+                is Resource.Loading -> {
+                    showProgressBar()
+                }
+
+            }
         })
     }
 
@@ -71,6 +90,14 @@ class SearchFragment : Fragment() {
             layoutManager = GridLayoutManager(context, 2, GridLayoutManager.VERTICAL, false)
             adapter = searchAdapter
         }
+    }
+
+    private fun showProgressBar() {
+        binding.progressBar.visibility = View.VISIBLE
+    }
+
+    private fun hideProgressBar() {
+        binding.progressBar.visibility = View.INVISIBLE
     }
 
 }

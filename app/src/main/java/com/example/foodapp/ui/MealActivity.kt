@@ -9,12 +9,14 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
+import com.example.foodapp.utils.Constants.Companion.MEAL_ID
+import com.example.foodapp.utils.Constants.Companion.MEAL_NAME
+import com.example.foodapp.utils.Constants.Companion.MEAL_THUMB
 import com.example.foodapp.R
 import com.example.foodapp.repository.MealRepository
 import com.example.foodapp.databinding.ActivityMealBinding
 import com.example.foodapp.db.MealDatabase
 import com.example.foodapp.models.Meal
-import com.example.foodapp.ui.fragments.HomeFragment
 import com.example.foodapp.viewmodels.MealViewModel
 import com.example.foodapp.viewmodels.MealViewModelFactory
 
@@ -29,9 +31,8 @@ class MealActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMealBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val mealDatabase = MealDatabase.getInstance(this)
-        val mealRepository = MealRepository()
-        val viewModelFactory = MealViewModelFactory(mealRepository, mealDatabase)
+        val mealRepository = MealRepository(MealDatabase(this))
+        val viewModelFactory = MealViewModelFactory(mealRepository)
         mealViewModel = ViewModelProvider(this, viewModelFactory)[MealViewModel::class.java]
         getMealInformation()
         setMealInformation()
@@ -85,9 +86,9 @@ class MealActivity : AppCompatActivity() {
 
     private fun getMealInformation() {
         val intent = intent
-        mealName = intent.getStringExtra(HomeFragment.MEAL_NAME) ?: ""
-        mealId = intent.getStringExtra(HomeFragment.MEAL_ID) ?: ""
-        mealThumb = intent.getStringExtra(HomeFragment.MEAL_THUMB) ?: ""
+        mealName = intent.getStringExtra(MEAL_NAME) ?: ""
+        mealId = intent.getStringExtra(MEAL_ID) ?: ""
+        mealThumb = intent.getStringExtra(MEAL_THUMB) ?: ""
     }
 
     private fun loadingCase() {

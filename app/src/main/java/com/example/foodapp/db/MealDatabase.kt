@@ -17,13 +17,14 @@ abstract class MealDatabase : RoomDatabase() {
         @Volatile
         var instance: MealDatabase? = null
 
-        @Synchronized
-        fun getInstance(context: Context): MealDatabase {
-            if (instance == null) {
-                instance = Room.databaseBuilder(context, MealDatabase::class.java, "meal.db")
-                    .fallbackToDestructiveMigration().build()
-            }
-            return instance as MealDatabase
+        private val LOCK = Any()
+        operator fun invoke(context: Context) = instance ?: synchronized(LOCK) {
+            instance ?: createDatabase(context).also { instance = it }
         }
+
+        private fun createDatabase(context: Context) =
+            Room.databaseBuilder(context.applicationContext, MealDatabase::class.java, "meal_db")
+                .build()
+
     }
 }

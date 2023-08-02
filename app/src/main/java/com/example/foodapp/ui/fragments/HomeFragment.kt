@@ -2,6 +2,7 @@ package com.example.foodapp.ui.fragments
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +12,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.foodapp.utils.Constants.Companion.CATEGORY_NAME
+import com.example.foodapp.utils.Constants.Companion.MEAL_ID
+import com.example.foodapp.utils.Constants.Companion.MEAL_NAME
+import com.example.foodapp.utils.Constants.Companion.MEAL_THUMB
 import com.example.foodapp.R
+import com.example.foodapp.utils.Resource
 import com.example.foodapp.adapters.CategoriesAdapter
 import com.example.foodapp.adapters.PopularItemsAdapter
 import com.example.foodapp.databinding.FragmentHomeBinding
@@ -26,13 +32,6 @@ class HomeFragment : Fragment() {
     private lateinit var popularItemsAdapter: PopularItemsAdapter
     private lateinit var categoriesAdapter: CategoriesAdapter
 
-    companion object {
-        const val MEAL_ID = "com.example.foodapp.ui.fragments.idMeal"
-        const val MEAL_NAME = "com.example.foodapp.ui.fragments.nameMeal"
-        const val MEAL_THUMB = "com.example.foodapp.ui.fragments.thumbMeal"
-        const val CATEGORY_NAME = "com.example.foodapp.ui.fragments.categoryName"
-
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,13 +86,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun observeCategories() {
-        homeViewModel.observeCategoriesLiveData()
-            .observe(viewLifecycleOwner, Observer { categories ->
-                categoriesAdapter.differ.submitList(categories)
-
-            })
-    }
 
     private fun onPopularItemClick() {
         popularItemsAdapter.onItemClick = { meal ->
@@ -115,13 +107,51 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun observeCategories() {
+        homeViewModel.observeCategoriesLiveData().observe(viewLifecycleOwner, Observer { response ->
+            when (response) {
+                is Resource.Success -> {
+                    response.data?.let { categoryList ->
+                        categoriesAdapter.differ.submitList(categoryList.categories)
+                    }
+                }
+                is Resource.Error -> {
+                    responseCase()
+                    response.message?.let { message ->
+                        Log.e("Home Fragment", "An error occurred: $message")
+                    }
+                }
+                is Resource.Loading -> {
+                    loadingCase()
+                }
+
+            }
+
+        })
+    }
+
     private fun observePopularMeals() {
         homeViewModel.observePopularMealsLiveData().observe(
-            viewLifecycleOwner
-        ) { mealList ->
-            popularItemsAdapter.differ.submitList(mealList)
+            viewLifecycleOwner, Observer { response ->
+                when (response) {
+                    is Resource.Success -> {
+                        responseCase()
+                        response.data?.let { categoriesResponse ->
+                            popularItemsAdapter.differ.submitList(categoriesResponse.meals)
+                        }
+                    }
+                    is Resource.Error -> {
+                        responseCase()
+                        response.message?.let { message ->
+                            Log.e("Home Fragment", "An error occurred: $message")
+                        }
+                    }
+                    is Resource.Loading -> {
+                        loadingCase()
+                    }
+                }
 
-        }
+            })
     }
 
     private fun onRandomMealClick() {

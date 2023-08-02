@@ -10,6 +10,9 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.example.foodapp.utils.Constants.Companion.MEAL_ID
+import com.example.foodapp.utils.Constants.Companion.MEAL_NAME
+import com.example.foodapp.utils.Constants.Companion.MEAL_THUMB
 import com.example.foodapp.adapters.MealsAdapter
 import com.example.foodapp.databinding.FragmentFavoritesBinding
 import com.example.foodapp.viewmodels.HomeViewModel
@@ -86,9 +89,9 @@ class FavoritesFragment : Fragment() {
     private fun onPopularItemClick() {
         favoritesAdapter.onItemClick = { meal ->
             val intent = Intent(activity, MealActivity::class.java)
-            intent.putExtra(HomeFragment.MEAL_ID, meal.idMeal)
-            intent.putExtra(HomeFragment.MEAL_NAME, meal.strMeal)
-            intent.putExtra(HomeFragment.MEAL_THUMB, meal.strMealThumb)
+            intent.putExtra(MEAL_ID, meal.idMeal)
+            intent.putExtra(MEAL_NAME, meal.strMeal)
+            intent.putExtra(MEAL_THUMB, meal.strMealThumb)
             startActivity(intent)
 
 

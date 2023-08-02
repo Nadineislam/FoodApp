@@ -15,9 +15,8 @@ import com.example.foodapp.viewmodels.HomeViewModelFactory
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     val homeViewModel: HomeViewModel by lazy {
-        val mealDatabase = MealDatabase.getInstance(this)
-        val mealRepository = MealRepository()
-        val homeViewModelFactory = HomeViewModelFactory(mealRepository, mealDatabase)
+        val mealRepository = MealRepository(MealDatabase(this))
+        val homeViewModelFactory = HomeViewModelFactory(mealRepository)
         ViewModelProvider(this, homeViewModelFactory)[HomeViewModel::class.java]
     }
 
