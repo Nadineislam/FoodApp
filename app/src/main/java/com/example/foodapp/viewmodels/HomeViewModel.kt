@@ -8,12 +8,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodapp.utils.Resource
 import com.example.foodapp.repository.MealRepository
 import com.example.foodapp.models.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import javax.inject.Inject
 
-class HomeViewModel(
+@HiltViewModel
+class HomeViewModel @Inject constructor(
     private val mealRepository: MealRepository
 ) : ViewModel() {
     private var randomMealLiveData = MutableLiveData<Meal>()

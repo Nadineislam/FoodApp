@@ -7,10 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodapp.utils.Resource
 import com.example.foodapp.repository.MealRepository
 import com.example.foodapp.models.MealsByCategoryList
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import javax.inject.Inject
 
-class CategoryMealsViewModel(private val mealRepository: MealRepository) : ViewModel() {
+@HiltViewModel
+class CategoryMealsViewModel @Inject constructor(private val mealRepository: MealRepository) :
+    ViewModel() {
     private val categoryMealsLiveData: MutableLiveData<Resource<MealsByCategoryList>> =
         MutableLiveData()
 

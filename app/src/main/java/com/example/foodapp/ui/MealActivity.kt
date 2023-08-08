@@ -6,34 +6,31 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.example.foodapp.utils.Constants.Companion.MEAL_ID
 import com.example.foodapp.utils.Constants.Companion.MEAL_NAME
 import com.example.foodapp.utils.Constants.Companion.MEAL_THUMB
 import com.example.foodapp.R
-import com.example.foodapp.repository.MealRepository
 import com.example.foodapp.databinding.ActivityMealBinding
-import com.example.foodapp.db.MealDatabase
 import com.example.foodapp.models.Meal
 import com.example.foodapp.viewmodels.MealViewModel
-import com.example.foodapp.viewmodels.MealViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MealActivity : AppCompatActivity() {
     lateinit var binding: ActivityMealBinding
     private lateinit var mealId: String
     private lateinit var mealName: String
     private lateinit var mealThumb: String
-    private lateinit var mealViewModel: MealViewModel
+
+    private val mealViewModel: MealViewModel by viewModels()
     private lateinit var youtubeLink: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMealBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val mealRepository = MealRepository(MealDatabase(this))
-        val viewModelFactory = MealViewModelFactory(mealRepository)
-        mealViewModel = ViewModelProvider(this, viewModelFactory)[MealViewModel::class.java]
         getMealInformation()
         setMealInformation()
         loadingCase()

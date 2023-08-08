@@ -8,11 +8,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodapp.repository.MealRepository
 import com.example.foodapp.models.Meal
 import com.example.foodapp.models.MealList
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Response
+import javax.inject.Inject
 
-class MealViewModel(
+@HiltViewModel
+class MealViewModel @Inject constructor(
     private val mealRepository: MealRepository
 ) : ViewModel() {
     private var mealDetailsLiveData = MutableLiveData<Meal>()

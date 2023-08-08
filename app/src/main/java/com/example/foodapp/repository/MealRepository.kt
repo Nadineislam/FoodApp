@@ -1,23 +1,27 @@
 package com.example.foodapp.repository
 
-import com.example.foodapp.api.RetrofitInstance
-import com.example.foodapp.db.MealDatabase
+import com.example.foodapp.api.ApiService
+import com.example.foodapp.db.MealDao
 import com.example.foodapp.models.Meal
+import javax.inject.Inject
 
-class MealRepository(private val mealDatabase: MealDatabase) {
-    fun getRandomMeal() = RetrofitInstance.api.getRandomMeal()
-    fun getMealDetails(id: String) = RetrofitInstance.api.getMealDetails(id)
-    suspend fun getMealsBySearch(mealName: String) = RetrofitInstance.api.getMealsBySearch(mealName)
+class MealRepository @Inject constructor(
+    private val mealDao: MealDao,
+    private val apiService: ApiService
+) {
+    fun getRandomMeal() = apiService.getRandomMeal()
+    fun getMealDetails(id: String) = apiService.getMealDetails(id)
+    suspend fun getMealsBySearch(mealName: String) = apiService.getMealsBySearch(mealName)
     suspend fun getPopularMeals(categoryName: String) =
-        RetrofitInstance.api.getPopularMeals(categoryName)
+        apiService.getPopularMeals(categoryName)
 
-    suspend fun getCategory() = RetrofitInstance.api.getCategory()
+    suspend fun getCategory() = apiService.getCategory()
     suspend fun getMealsByCategory(categoryName: String) =
-        RetrofitInstance.api.getMealsByCategory(categoryName)
+        apiService.getMealsByCategory(categoryName)
 
-    suspend fun upsertMeal(meal: Meal) = mealDatabase.mealDao().upsertMeal(meal)
-    suspend fun deleteMeal(meal: Meal) = mealDatabase.mealDao().deleteMeal(meal)
-    fun getMeals() = mealDatabase.mealDao().getMeals()
+    suspend fun upsertMeal(meal: Meal) = mealDao.upsertMeal(meal)
+    suspend fun deleteMeal(meal: Meal) = mealDao.deleteMeal(meal)
+    fun getMeals() = mealDao.getMeals()
 
 
 }
