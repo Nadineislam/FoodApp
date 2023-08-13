@@ -5,7 +5,6 @@ import androidx.room.Room
 import com.example.foodapp.api.ApiService
 import com.example.foodapp.db.MealDao
 import com.example.foodapp.db.MealDatabase
-import com.example.foodapp.repository.MealRepository
 import com.example.foodapp.utils.Constants.Companion.API_KEY
 import dagger.Module
 import dagger.Provides
@@ -57,9 +56,6 @@ object AppModule {
     @Provides
     fun provideApiService(retrofit: Retrofit): ApiService = retrofit.create(ApiService::class.java)
 
-    @Singleton
-    @Provides
-    fun providesRepository(mealDao: MealDao,apiService: ApiService) = MealRepository(mealDao,apiService)
 
 
 
