@@ -2,10 +2,10 @@ package com.example.foodapp.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.foodapp.api.ApiService
-import com.example.foodapp.db.MealDao
-import com.example.foodapp.db.MealDatabase
-import com.example.foodapp.utils.Constants.Companion.API_KEY
+import com.example.foodapp.data.api.ApiService
+import com.example.foodapp.data.db.MealDao
+import com.example.foodapp.data.db.MealDatabase
+import com.example.foodapp.data.utils.Constants.Companion.API_KEY
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
