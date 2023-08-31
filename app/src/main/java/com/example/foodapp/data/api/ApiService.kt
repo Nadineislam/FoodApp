@@ -8,6 +8,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface ApiService {
+
     @GET("random.php")
    suspend fun getRandomMeal(): Response<MealList>
 
