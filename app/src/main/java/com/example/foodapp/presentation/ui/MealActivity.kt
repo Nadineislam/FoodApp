@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.foodapp.data.utils.Constants.Companion.MEAL_ID
 import com.example.foodapp.data.utils.Constants.Companion.MEAL_NAME
@@ -15,8 +16,10 @@ import com.example.foodapp.data.utils.Constants.Companion.MEAL_THUMB
 import com.example.foodapp.R
 import com.example.foodapp.databinding.ActivityMealBinding
 import com.example.foodapp.data.models.Meal
+import com.example.foodapp.data.utils.Resource
 import com.example.foodapp.presentation.viewmodels.MealViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MealActivity : AppCompatActivity() {
@@ -35,9 +38,38 @@ class MealActivity : AppCompatActivity() {
         setMealInformation()
         loadingCase()
         mealViewModel.getMealDetails(mealId)
-        observeMealDetailsLiveData()
+        getMealDetails()
         onYoutubeImageClick()
         onFavoriteClick()
+    }
+
+    private var savedMeal: Meal? = null
+    private fun getMealDetails() {
+        lifecycleScope.launch {
+            mealViewModel.mealDetails.collect { resource ->
+                when (resource) {
+                    is Resource.Loading -> {
+                        loadingCase()
+                    }
+                    is Resource.Success -> {
+                        onResponseCase()
+                        val mealList = resource.data
+                        savedMeal = mealList?.meals?.firstOrNull()
+                        // Update UI with the meal details
+                        binding.tvCategory.text = savedMeal?.strCategory.toString()
+                        binding.tvArea.text = savedMeal?.strArea.toString()
+                        binding.tvInstructionsDesc.text = savedMeal?.strInstructions.toString()
+                        youtubeLink = savedMeal?.strYoutube.toString()
+                        onResponseCase()
+                    }
+                    is Resource.Error -> {
+                        onResponseCase()
+                        val errorMessage = resource.message
+                        Toast.makeText(baseContext, errorMessage, Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
     }
 
     private fun onFavoriteClick() {
@@ -49,20 +81,6 @@ class MealActivity : AppCompatActivity() {
         }
     }
 
-    private var savedMeal: Meal? = null
-    private fun observeMealDetailsLiveData() {
-        mealViewModel.observeMealDetailsLiveData().observe(
-            this
-        ) { t ->
-            val meal = t
-            savedMeal = meal
-            binding.tvCategory.text = meal?.strCategory.toString()
-            binding.tvArea.text = meal?.strArea.toString()
-            binding.tvInstructionsDesc.text = meal?.strInstructions.toString()
-            youtubeLink = meal?.strYoutube.toString()
-            onResponseCase()
-        }
-    }
 
     private fun setMealInformation() {
         Glide.with(applicationContext).load(mealThumb).into(binding.imgMealDetails)

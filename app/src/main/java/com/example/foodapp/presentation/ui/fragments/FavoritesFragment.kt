@@ -52,9 +52,9 @@ class FavoritesFragment : Fragment() {
                 val deletedMeal = favoritesAdapter.differ.currentList[position]
                 viewModel.deleteMeal(deletedMeal)
                 Snackbar.make(requireView(), "Meal deleted", Snackbar.LENGTH_LONG)
-                    .setAction("Undo", View.OnClickListener {
+                    .setAction("Undo") {
                         viewModel.insertMeal(deletedMeal)
-                    }).show()
+                    }.show()
 
             }
 
@@ -71,7 +71,7 @@ class FavoritesFragment : Fragment() {
     }
 
     private fun observeFavoritesMeals() {
-        viewModel.observeFavoritesMealsLiveData().observe(viewLifecycleOwner, Observer { meals ->
+        viewModel.observeFavoritesMealsStateFlow().observe(viewLifecycleOwner, Observer { meals ->
             favoritesAdapter.differ.submitList(meals)
 
         })

@@ -7,8 +7,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
-import androidx.lifecycle.Observer
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.foodapp.presentation.adapters.MealsAdapter
 import com.example.foodapp.databinding.FragmentSearchBinding
@@ -42,7 +43,7 @@ class SearchFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         prepareRecyclerView()
         binding.arrow.setOnClickListener { searchMeals() }
-        observeSearchMealsLiveData()
+        getSearchMeals()
         var searchJob: Job? = null
         binding.etSearch.addTextChangedListener { searchQuery ->
             searchJob?.cancel()
@@ -54,27 +55,28 @@ class SearchFragment : Fragment() {
 
     }
 
-    private fun observeSearchMealsLiveData() {
-        viewModel.observeSearchMealsLiveData().observe(viewLifecycleOwner, Observer { response ->
-            when (response) {
-                is Resource.Success -> {
-                    response.data?.let { mealList ->
-                        searchAdapter.differ.submitList(mealList.meals)
-                        hideProgressBar()
+    private fun getSearchMeals() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.searchMeal.collect { response ->
+                    when (response) {
+                        is Resource.Loading -> showProgressBar()
+                        is Resource.Success -> {
+                            response.data?.let { mealList ->
+                                searchAdapter.differ.submitList(mealList.meals)
+                                hideProgressBar()
+                            }
+                        }
+                        is Resource.Error -> {
+                            hideProgressBar()
+                            response.message?.let { message ->
+                                Log.e("Home Fragment", "An error occurred: $message")
+                            }
+                        }
                     }
                 }
-                is Resource.Error -> {
-                    hideProgressBar()
-                    response.message?.let { message ->
-                        Log.e("Home Fragment", "An error occurred: $message")
-                    }
-                }
-                is Resource.Loading -> {
-                    showProgressBar()
-                }
-
             }
-        })
+        }
     }
 
     private fun searchMeals() {

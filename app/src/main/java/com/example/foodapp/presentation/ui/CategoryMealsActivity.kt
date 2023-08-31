@@ -7,7 +7,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
-import androidx.lifecycle.Observer
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.foodapp.data.utils.Constants.Companion.CATEGORY_NAME
 import com.example.foodapp.data.utils.Constants.Companion.MEAL_ID
@@ -18,6 +20,7 @@ import com.example.foodapp.presentation.adapters.CategoryMealsAdapter
 import com.example.foodapp.databinding.ActivityCategoryMealsBinding
 import com.example.foodapp.presentation.viewmodels.CategoryMealsViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class CategoryMealsActivity : AppCompatActivity() {
@@ -31,26 +34,27 @@ class CategoryMealsActivity : AppCompatActivity() {
         prepareRecyclerView()
 
         categoryMealsViewModel.getMealsByCategory(intent.getStringExtra(CATEGORY_NAME) ?: "")
-
-        categoryMealsViewModel.observeMealsLiveData().observe(this, Observer { response ->
-            when (response) {
-                is Resource.Success -> {
-                    response.data?.let { mealsByCategoryList ->
-                        hideProgressBar()
-                        categoryMealsAdapter.differ.submitList(mealsByCategoryList.meals)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                categoryMealsViewModel.categoryMeals.collect { response ->
+                    when (response) {
+                        is Resource.Loading -> showProgressBar()
+                        is Resource.Success -> {
+                            response.data?.let { mealsByCategoryList ->
+                                hideProgressBar()
+                                categoryMealsAdapter.differ.submitList(mealsByCategoryList.meals)
+                            }
+                        }
+                        is Resource.Error -> {
+                            hideProgressBar()
+                            response.message?.let { message ->
+                                Log.e("Home Fragment", "An error occurred: $message")
+                            }
+                        }
                     }
-                }
-                is Resource.Error -> {
-                    hideProgressBar()
-                    response.message?.let { message ->
-                        Log.e("Home Fragment", "An error occurred: $message")
-                    }
-                }
-                is Resource.Loading -> {
-                    showProgressBar()
                 }
             }
-        })
+        }
 
         onCategoryItemClick()
     }

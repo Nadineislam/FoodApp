@@ -1,16 +1,15 @@
 package com.example.foodapp.presentation.viewmodels
 
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.repository.MealRepository
 import com.example.foodapp.data.models.Meal
 import com.example.foodapp.data.models.MealList
+import com.example.foodapp.data.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import retrofit2.Call
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -18,25 +17,22 @@ import javax.inject.Inject
 class MealViewModel @Inject constructor(
     private val mealRepository: MealRepository
 ) : ViewModel() {
-    private var mealDetailsLiveData = MutableLiveData<Meal>()
-    fun getMealDetails(id: String) =
-        mealRepository.getMealDetails(id).enqueue(object : retrofit2.Callback<MealList> {
-            override fun onResponse(call: Call<MealList>, response: Response<MealList>) {
-                if (response.body() != null) {
-                    mealDetailsLiveData.value = response.body()!!.meals[0]
-                } else {
-                    return
-                }
+    private val _mealDetails: MutableStateFlow<Resource<MealList>> = MutableStateFlow(Resource.Loading())
+    val mealDetails: StateFlow<Resource<MealList>> = _mealDetails
+
+   fun getMealDetails(id:String) = viewModelScope.launch {
+       _mealDetails.value=Resource.Loading()
+       val response = mealRepository.getMealDetails(id)
+       _mealDetails.value=handleMealDetailsResponse(response)
+   }
+
+    private fun handleMealDetailsResponse(response: Response<MealList>): Resource<MealList> {
+        if (response.isSuccessful) {
+            response.body()?.let { resultResponse ->
+                return Resource.Success(resultResponse)
             }
-
-            override fun onFailure(call: Call<MealList>, t: Throwable) {
-                Log.e("Meal Activity", t.message.toString())
-            }
-
-        })
-
-    fun observeMealDetailsLiveData(): LiveData<Meal> {
-        return mealDetailsLiveData
+        }
+        return Resource.Error(response.message())
     }
 
     fun insertMeal(meal: Meal) {

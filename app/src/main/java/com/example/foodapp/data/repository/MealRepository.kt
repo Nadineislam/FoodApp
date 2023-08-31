@@ -9,8 +9,8 @@ class MealRepository @Inject constructor(
     private val mealDao: MealDao,
     private val apiService: ApiService
 ) {
-    fun getRandomMeal() = apiService.getRandomMeal()
-    fun getMealDetails(id: String) = apiService.getMealDetails(id)
+    suspend fun getRandomMeal() = apiService.getRandomMeal()
+    suspend fun getMealDetails(id: String) = apiService.getMealDetails(id)
     suspend fun getMealsBySearch(mealName: String) = apiService.getMealsBySearch(mealName)
     suspend fun getPopularMeals(categoryName: String) =
         apiService.getPopularMeals(categoryName)

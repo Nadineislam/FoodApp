@@ -3,6 +3,7 @@ package com.example.foodapp.data.db
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.example.foodapp.data.models.Meal
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MealDao {

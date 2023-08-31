@@ -7,7 +7,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.foodapp.data.utils.Constants.Companion.CATEGORY_NAME
 import com.example.foodapp.data.utils.Resource
@@ -16,6 +18,7 @@ import com.example.foodapp.databinding.FragmentCategoriesBinding
 import com.example.foodapp.presentation.ui.CategoryMealsActivity
 import com.example.foodapp.presentation.viewmodels.HomeViewModel
 import com.example.foodapp.presentation.ui.MainActivity
+import kotlinx.coroutines.launch
 
 class CategoriesFragment : Fragment() {
     lateinit var binding: FragmentCategoriesBinding
@@ -29,32 +32,32 @@ class CategoriesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prepareRecyclerView()
-        observeCategories()
+        getCategories()
         onCategoryClick()
     }
 
-    private fun observeCategories() {
-        homeViewModel.observeCategoriesLiveData().observe(viewLifecycleOwner, Observer { response ->
-            when (response) {
-                is Resource.Success -> {
-                    response.data?.let { categoryList ->
-                        hideProgressBar()
-                        categoriesAdapter.differ.submitList(categoryList.categories)
+    private fun getCategories() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.categories.collect { response ->
+                    when (response) {
+                        is Resource.Loading -> showProgressBar()
+                        is Resource.Success -> {
+                            response.data?.let { categoryList ->
+                                hideProgressBar()
+                                categoriesAdapter.differ.submitList(categoryList.categories)
+                            }
+                        }
+                        is Resource.Error -> {
+                            hideProgressBar()
+                            response.message?.let { message ->
+                                Log.e("Home Fragment", "An error occurred: $message")
+                            }
+                        }
                     }
                 }
-                is Resource.Error -> {
-                    hideProgressBar()
-                    response.message?.let { message ->
-                        Log.e("Home Fragment", "An error occurred: $message")
-                    }
-                }
-                is Resource.Loading -> {
-                    showProgressBar()
-                }
-
             }
-
-        })
+        }
     }
 
     private fun prepareRecyclerView() {

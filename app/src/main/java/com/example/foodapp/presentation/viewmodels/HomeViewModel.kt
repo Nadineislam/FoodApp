@@ -1,17 +1,15 @@
 package com.example.foodapp.presentation.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.utils.Resource
 import com.example.foodapp.data.repository.MealRepository
 import com.example.foodapp.data.models.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -19,43 +17,44 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val mealRepository: MealRepository
 ) : ViewModel() {
-    private var randomMealLiveData = MutableLiveData<Meal>()
-    private var popularMealsLiveData: MutableLiveData<Resource<MealsByCategoryList>> =
-        MutableLiveData()
-    private var categoriesLiveData: MutableLiveData<Resource<CategoryList>> = MutableLiveData()
+    private val _randomMeal: MutableStateFlow<Resource<Meal>> = MutableStateFlow(Resource.Loading())
+    val randomMeal: StateFlow<Resource<Meal>> = _randomMeal
+
+    private val _popularMeals: MutableStateFlow<Resource<MealsByCategoryList>> =
+        MutableStateFlow(Resource.Loading())
+    val popularMeals: StateFlow<Resource<MealsByCategoryList>> = _popularMeals
+
+    private val _categories: MutableStateFlow<Resource<CategoryList>> =
+        MutableStateFlow(Resource.Loading())
+    val categories: StateFlow<Resource<CategoryList>> = _categories
+
     private var favoritesMealsLiveData = mealRepository.getMeals()
 
-    private var searchMealLiveData = MutableLiveData<Resource<MealList>>()
+    private val _searchMeal = MutableStateFlow<Resource<MealList>>(Resource.Loading())
+    val searchMeal: StateFlow<Resource<MealList>> = _searchMeal
 
     init {
         getRandomMeal()
     }
 
-    private fun getRandomMeal() =
-        mealRepository.getRandomMeal().enqueue(object : Callback<MealList> {
-            override fun onResponse(call: Call<MealList>, response: Response<MealList>) {
-                if (response.body() != null) {
-                    val randomMeal: Meal = response.body()!!.meals[0]
-                    randomMealLiveData.value = randomMeal
-                } else {
-                    return
-                }
-            }
+    private fun getRandomMeal() = viewModelScope.launch {
+        _randomMeal.value = Resource.Loading()
+        val response = mealRepository.getRandomMeal()
+        if (response.isSuccessful) {
+            val mealList = response.body()
+            val randomMeal = mealList?.meals?.firstOrNull()
+            _randomMeal.value = Resource.Success(randomMeal as Meal)
+        } else {
+            val errorMessage = response.message()
+            _randomMeal.value = Resource.Error(errorMessage)
+        }
 
-            override fun onFailure(call: Call<MealList>, t: Throwable) {
-                Log.e("TEST", t.message.toString())
-            }
-
-        })
-
-    fun observeRandomMealLiveData(): LiveData<Meal> {
-        return randomMealLiveData
     }
 
     fun getCategories() = viewModelScope.launch {
-        categoriesLiveData.postValue(Resource.Loading())
+        _categories.value = Resource.Loading()
         val response = mealRepository.getCategory()
-        categoriesLiveData.postValue(handleCategoriesResponse(response))
+        _categories.value = handleCategoriesResponse(response)
     }
 
     private fun handleCategoriesResponse(response: Response<CategoryList>): Resource<CategoryList> {
@@ -68,9 +67,9 @@ class HomeViewModel @Inject constructor(
     }
 
     fun getPopularMeals() = viewModelScope.launch {
-        popularMealsLiveData.postValue(Resource.Loading())
+        _popularMeals.value = Resource.Loading()
         val response = mealRepository.getPopularMeals("Seafood")
-        popularMealsLiveData.postValue(handlePopularMealsResponse(response))
+        _popularMeals.value = handlePopularMealsResponse(response)
     }
 
     private fun handlePopularMealsResponse(response: Response<MealsByCategoryList>): Resource<MealsByCategoryList> {
@@ -83,9 +82,9 @@ class HomeViewModel @Inject constructor(
     }
 
     fun searchMeal(searchQuery: String) = viewModelScope.launch {
-        searchMealLiveData.postValue(Resource.Loading())
+        _searchMeal.value = Resource.Loading()
         val response = mealRepository.getMealsBySearch(searchQuery)
-        searchMealLiveData.postValue(handleSearchMealResponse(response))
+        _searchMeal.value = handleSearchMealResponse(response)
     }
 
     private fun handleSearchMealResponse(response: Response<MealList>): Resource<MealList> {
@@ -110,20 +109,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun observeSearchMealsLiveData(): LiveData<Resource<MealList>> {
-        return searchMealLiveData
-    }
-
-    fun observePopularMealsLiveData(): LiveData<Resource<MealsByCategoryList>> {
-        return popularMealsLiveData
-    }
-
-
-    fun observeCategoriesLiveData(): LiveData<Resource<CategoryList>> {
-        return categoriesLiveData
-    }
-
-    fun observeFavoritesMealsLiveData(): LiveData<List<Meal>> {
+    fun observeFavoritesMealsStateFlow(): LiveData<List<Meal>> {
         return favoritesMealsLiveData
     }
 }

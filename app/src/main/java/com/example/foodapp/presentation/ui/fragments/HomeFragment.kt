@@ -6,8 +6,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,6 +27,7 @@ import com.example.foodapp.databinding.FragmentHomeBinding
 import com.example.foodapp.data.models.Meal
 import com.example.foodapp.presentation.ui.*
 import com.example.foodapp.presentation.viewmodels.HomeViewModel
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
@@ -51,14 +55,14 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         loadingCase()
         preparePopularItemsRecyclerView()
-        observeRandomMeal()
+        getRandomMeal()
         onRandomMealClick()
         homeViewModel.getPopularMeals()
-        observePopularMeals()
+        getPopularMeals()
         onPopularItemClick()
         prepareCategoriesRecyclerView()
         homeViewModel.getCategories()
-        observeCategories()
+        getCategories()
         onCategoryClick()
         onSearchIconClick()
 
@@ -107,51 +111,53 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun observeCategories() {
-        homeViewModel.observeCategoriesLiveData().observe(viewLifecycleOwner, Observer { response ->
-            when (response) {
-                is Resource.Success -> {
-                    response.data?.let { categoryList ->
-                        categoriesAdapter.differ.submitList(categoryList.categories)
+    private fun getCategories() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.categories.collect { response ->
+                    when (response) {
+                        is Resource.Loading -> loadingCase()
+                        is Resource.Success -> {
+                            response.data?.let { categoryList ->
+                                categoriesAdapter.differ.submitList(categoryList.categories)
+                            }
+                        }
+                        is Resource.Error -> {
+                            responseCase()
+                            response.message?.let { message ->
+                                Log.e("Home Fragment", "An error occurred: $message")
+                            }
+                        }
                     }
                 }
-                is Resource.Error -> {
-                    responseCase()
-                    response.message?.let { message ->
-                        Log.e("Home Fragment", "An error occurred: $message")
-                    }
-                }
-                is Resource.Loading -> {
-                    loadingCase()
-                }
-
             }
+        }
 
-        })
     }
 
-    private fun observePopularMeals() {
-        homeViewModel.observePopularMealsLiveData().observe(
-            viewLifecycleOwner, Observer { response ->
-                when (response) {
-                    is Resource.Success -> {
-                        responseCase()
-                        response.data?.let { categoriesResponse ->
-                            popularItemsAdapter.differ.submitList(categoriesResponse.meals)
+    private fun getPopularMeals() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.popularMeals.collect { response ->
+                    when (response) {
+                        is Resource.Loading -> loadingCase()
+                        is Resource.Success -> {
+                            responseCase()
+                            response.data?.let { categoriesResponse ->
+                                popularItemsAdapter.differ.submitList(categoriesResponse.meals)
+                            }
                         }
-                    }
-                    is Resource.Error -> {
-                        responseCase()
-                        response.message?.let { message ->
-                            Log.e("Home Fragment", "An error occurred: $message")
+                        is Resource.Error -> {
+                            responseCase()
+                            response.message?.let { message ->
+                                Log.e("Home Fragment", "An error occurred: $message")
+                            }
                         }
-                    }
-                    is Resource.Loading -> {
-                        loadingCase()
                     }
                 }
+            }
+        }
 
-            })
     }
 
     private fun onRandomMealClick() {
@@ -164,14 +170,27 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun observeRandomMeal() {
-        homeViewModel.observeRandomMealLiveData().observe(
-            viewLifecycleOwner
-        ) { meal ->
-            Glide.with(this@HomeFragment).load(meal?.strMealThumb)
-                .into(binding.imgRandomMeal)
-            this.randomMeal = meal
-            responseCase()
+    private fun getRandomMeal() {
+        lifecycleScope.launch {
+            homeViewModel.randomMeal.collect { resource ->
+                when (resource) {
+                    is Resource.Loading -> {
+                        loadingCase()
+                    }
+                    is Resource.Success -> {
+                        val meal = resource.data
+                        Glide.with(this@HomeFragment).load(meal?.strMealThumb)
+                            .into(binding.imgRandomMeal)
+                        randomMeal=meal as Meal
+                        responseCase()
+                    }
+                    is Resource.Error -> {
+                        responseCase()
+                        val errorMessage = resource.message
+                       Toast.makeText(requireContext(),errorMessage,Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
         }
     }
 
