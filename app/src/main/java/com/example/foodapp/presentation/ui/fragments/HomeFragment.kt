@@ -172,6 +172,7 @@ class HomeFragment : Fragment() {
 
     private fun getRandomMeal() {
         lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
             homeViewModel.randomMeal.collect { resource ->
                 when (resource) {
                     is Resource.Loading -> {
@@ -191,7 +192,7 @@ class HomeFragment : Fragment() {
                     }
                 }
             }
-        }
+        }}
     }
 
     private fun loadingCase() {

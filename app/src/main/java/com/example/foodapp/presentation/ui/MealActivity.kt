@@ -8,7 +8,9 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.example.foodapp.data.utils.Constants.Companion.MEAL_ID
 import com.example.foodapp.data.utils.Constants.Companion.MEAL_NAME
@@ -46,6 +48,7 @@ class MealActivity : AppCompatActivity() {
     private var savedMeal: Meal? = null
     private fun getMealDetails() {
         lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED){
             mealViewModel.mealDetails.collect { resource ->
                 when (resource) {
                     is Resource.Loading -> {
@@ -55,7 +58,6 @@ class MealActivity : AppCompatActivity() {
                         onResponseCase()
                         val mealList = resource.data
                         savedMeal = mealList?.meals?.firstOrNull()
-                        // Update UI with the meal details
                         binding.tvCategory.text = savedMeal?.strCategory.toString()
                         binding.tvArea.text = savedMeal?.strArea.toString()
                         binding.tvInstructionsDesc.text = savedMeal?.strInstructions.toString()
@@ -69,7 +71,7 @@ class MealActivity : AppCompatActivity() {
                     }
                 }
             }
-        }
+        }}
     }
 
     private fun onFavoriteClick() {
