@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.utils.Resource
-import com.example.foodapp.data.repository.MealRepository
+import com.example.foodapp.data.repository.MealsRepository
 import com.example.foodapp.data.models.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val mealRepository: MealRepository
+    private val mealRepository: MealsRepository
 ) : ViewModel() {
     private val _randomMeal: MutableStateFlow<Resource<Meal>> = MutableStateFlow(Resource.Loading())
     val randomMeal: StateFlow<Resource<Meal>> = _randomMeal

@@ -3,7 +3,7 @@ package com.example.foodapp.presentation.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.utils.Resource
-import com.example.foodapp.data.repository.MealRepository
+import com.example.foodapp.data.repository.MealsRepository
 import com.example.foodapp.data.models.MealsByCategoryList
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,17 +13,19 @@ import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
-class CategoryMealsViewModel @Inject constructor(private val mealRepository: MealRepository) :
+class CategoryMealsViewModel @Inject constructor(
+    private val mealRepository: MealsRepository
+) :
     ViewModel() {
     private val _categoryMeals: MutableStateFlow<Resource<MealsByCategoryList>> =
         MutableStateFlow(Resource.Loading())
-    val categoryMeals:StateFlow<Resource<MealsByCategoryList>> = _categoryMeals
+    val categoryMeals: StateFlow<Resource<MealsByCategoryList>> = _categoryMeals
 
 
     fun getMealsByCategory(categoryName: String) = viewModelScope.launch {
-        _categoryMeals.value=Resource.Loading()
+        _categoryMeals.value = Resource.Loading()
         val response = mealRepository.getMealsByCategory(categoryName)
-        _categoryMeals.value=handleCategoryMealsLiveData(response)
+        _categoryMeals.value = handleCategoryMealsLiveData(response)
 
     }
 

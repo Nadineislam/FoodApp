@@ -19,7 +19,7 @@ import com.example.foodapp.R
 import com.example.foodapp.databinding.ActivityMealBinding
 import com.example.foodapp.data.models.Meal
 import com.example.foodapp.data.utils.Resource
-import com.example.foodapp.presentation.viewmodels.MealViewModel
+import com.example.foodapp.presentation.viewmodels.MealsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -30,7 +30,7 @@ class MealActivity : AppCompatActivity() {
     private lateinit var mealName: String
     private lateinit var mealThumb: String
 
-    private val mealViewModel: MealViewModel by viewModels()
+    private val mealViewModel: MealsViewModel by viewModels()
     private lateinit var youtubeLink: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,7 +77,7 @@ class MealActivity : AppCompatActivity() {
     private fun onFavoriteClick() {
         binding.fab.setOnClickListener {
             savedMeal?.let {
-                mealViewModel.insertMeal(it)
+                mealViewModel.upsertMeal(it)
                 Toast.makeText(baseContext, "Meal saved", Toast.LENGTH_LONG).show()
             }
         }

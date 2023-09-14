@@ -5,7 +5,7 @@ import com.example.foodapp.data.db.MealDao
 import com.example.foodapp.data.models.Meal
 import javax.inject.Inject
 
-class MealRepository @Inject constructor(
+class MealsRepository @Inject constructor(
     private val mealDao: MealDao,
     private val apiService: ApiService
 ) {
